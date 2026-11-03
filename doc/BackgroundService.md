@@ -15,7 +15,17 @@ Uncheck **Start with Windows** to stop and disable the service. Settings already
 
 ## Install from PowerShell
 
-Run in an **administrator Windows PowerShell** in the build output folder:
+On a new computer, download the [official Raw Accel v1.7.1 release](https://github.com/RawAccelOfficial/rawaccel/releases/tag/v1.7.1), extract it, run its `installer.exe` as administrator, and restart Windows first. This package contains the background service and GUI; it does not include the driver installer. You can configure your preferred sensitivity in our `rawaccel.exe` before installing the service.
+
+Run in an **administrator Windows PowerShell** in the extracted build output folder:
+
+```powershell
+.\Install-Service.ps1
+```
+
+On first installation, the installer captures the settings currently active in the installed driver, so you do not need to create or supply `settings.json`. If you have not configured Raw Accel yet, these will be the driver's current defaults. On an existing service installation, this command keeps the previously saved startup settings.
+
+To import a settings file you already have, supply its actual path:
 
 ```powershell
 .\Install-Service.ps1 -SettingsPath 'C:\path\to\your\settings.json'
@@ -23,7 +33,7 @@ Run in an **administrator Windows PowerShell** in the build output folder:
 
 The installer validates the supplied file before changing the installation. It copies the executable and its dependencies to `%ProgramFiles%\RawAccel\Service`, registers `RawAccelService` with automatic startup, and starts it under **LocalService**. Configuration and rotating logs live in `%ProgramData%\RawAccel`. Administrators and the service can modify these files; ordinary users can read them and submit validated settings through a local named pipe. Network pipe access is denied. No signed driver binary is changed by this installer.
 
-Installation also supports updating an existing installation; omit `-SettingsPath` to retain its saved configuration. If a driver upgrade is needed, use Raw Accel's normal driver installer separately. Moving the original download folder does not affect the installed service.
+Supplying `-SettingsPath '.\settings.json'` requires that file to exist in your current folder. Click **Apply** in `rawaccel.exe` to create the portable settings file while the service is absent or disabled, or omit `-SettingsPath` to use the first-install capture described above. If a driver upgrade is needed, use Raw Accel's normal driver installer separately. Moving the original download folder does not affect the installed service.
 
 ```powershell
 # Disable automatic startup and stop the service:
@@ -39,6 +49,7 @@ The installer deliberately leaves unrelated Startup-folder shortcuts and schedul
 
 ```powershell
 .\RawAccelService.exe --status
+.\RawAccelService.exe --export 'C:\path\to\settings.json'
 .\RawAccelService.exe --validate 'C:\path\to\settings.json'
 .\RawAccelService.exe --apply 'C:\path\to\settings.json'
 Get-Content "$env:ProgramData\RawAccel\service.log" -Tail 30
@@ -63,3 +74,5 @@ To build the C# components and run service tests without rebuilding the driver o
 Supply `wrapper.dll` and `Newtonsoft.Json.dll` compatible with this checkout and the selected architecture. For this checkout, the official v1.7.1 release contains the required wrapper APIs. This helper does not download dependencies or install a service. Output defaults to `artifacts\user-mode`.
 
 Automated tests cover settings persistence, restart restoration, backup recovery, missing and invalid files, driver failure, rollback, concurrent writes, startup/GUI ordering, resume, message size limits, actual wrapper parsing and local pipe requests/shutdown. A real reboot, actual sleep/wake, mouse reconnection and UAC installation/removal must also be checked on Windows with the installed driver.
+
+Run `.\tools\Test-Installer.ps1` to check first-install configuration capture, updates, missing files, missing drivers and validation failures without modifying any installed service or requiring administrator rights.

@@ -2,6 +2,7 @@ using RawAccel.ServiceSupport;
 using System;
 using System.IO;
 using System.ServiceProcess;
+using System.Text;
 
 namespace RawAccel.Service
 {
@@ -11,6 +12,13 @@ namespace RawAccel.Service
         {
             try
             {
+                if (args.Length == 2 && args[0] == "--export")
+                {
+                    string json = new AccelerationDriver().ReadActive();
+                    File.WriteAllText(args[1], json, new UTF8Encoding(false));
+                    Console.WriteLine("Exported the settings currently active in the Raw Accel driver.");
+                    return 0;
+                }
                 if (args.Length == 2 && args[0] == "--validate")
                 {
                     if (new FileInfo(args[1]).Length > ServiceProtocol.MaximumMessageBytes)
@@ -35,7 +43,7 @@ namespace RawAccel.Service
                     ServiceBase.Run(new RawAccelService());
                     return 0;
                 }
-                Console.WriteLine("RawAccelService --validate <settings.json> | --status | --apply <settings.json>\n" +
+                Console.WriteLine("RawAccelService --export <settings.json> | --validate <settings.json> | --status | --apply <settings.json>\n" +
                     "Install using Install-Service.ps1 from an administrator PowerShell.");
                 return args.Length == 0 ? 0 : 1;
             }

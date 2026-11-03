@@ -78,4 +78,6 @@ $testSources = @('service-tests\Program.cs', 'service\SettingsEngine.cs', 'servi
 Compile ($common + @('/target:exe', ('/out:' + (Join-Path $OutputDirectory 'service-tests.exe'))) + $testSources + $shared)
 & (Join-Path $OutputDirectory 'service-tests.exe')
 if ($LASTEXITCODE -ne 0) { throw 'Service tests failed.' }
+& (Join-Path $PSScriptRoot 'Test-Installer.ps1')
+if ($LASTEXITCODE -ne 0) { throw 'Installer tests failed.' }
 Write-Output "Built GUI and service; tests passed. Output: $OutputDirectory"

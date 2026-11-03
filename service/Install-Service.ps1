@@ -15,6 +15,41 @@ $executable = Join-Path $installDirectory 'RawAccelService.exe'
 $configPath = Join-Path $dataDirectory 'settings.json'
 $payload = @('RawAccelService.exe', 'RawAccelService.exe.config', 'wrapper.dll', 'Newtonsoft.Json.dll')
 
+function Read-StartupSettings([string]$RequestedPath, [string]$SavedPath, [string]$ServiceExecutable) {
+    $temporary = $null
+    try {
+        $save = $false
+        if ($RequestedPath) {
+            if (!(Test-Path -LiteralPath $RequestedPath -PathType Leaf)) {
+                throw "Settings file '$RequestedPath' was not found. Open rawaccel.exe and click Apply to create settings.json, or run Install-Service.ps1 without -SettingsPath to capture the active settings. On a new computer, install the official Raw Accel driver and restart first."
+            }
+            $source = (Resolve-Path -LiteralPath $RequestedPath).Path
+            $save = $true
+        }
+        elseif (Test-Path -LiteralPath $SavedPath -PathType Leaf) {
+            $source = $SavedPath
+        }
+        else {
+            $temporary = [IO.Path]::GetTempFileName()
+            try {
+                & $ServiceExecutable --export $temporary | Out-Host
+                if ($LASTEXITCODE -ne 0) { throw 'The driver settings could not be read.' }
+            }
+            catch {
+                throw "Could not capture active settings. On a new computer, install the official Raw Accel driver, restart Windows, then run this installer again. $($_.Exception.Message)"
+            }
+            $source = $temporary
+            $save = $true
+        }
+        & $ServiceExecutable --validate $source | Out-Host
+        if ($LASTEXITCODE -ne 0) { throw 'Settings validation failed; nothing was installed.' }
+        return [PSCustomObject]@{ Text = [IO.File]::ReadAllText($source); Save = $save }
+    }
+    finally {
+        if ($temporary -and [IO.File]::Exists($temporary)) { [IO.File]::Delete($temporary) }
+    }
+}
+
 function Assert-PlainPath([string]$Path) {
     $item = Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
     if ($null -ne $item) {
@@ -104,13 +139,7 @@ try {
             throw "Missing $name. Run this script beside the complete service build output."
         }
     }
-    if (!$SettingsPath -and !(Test-Path -LiteralPath $configPath)) {
-        throw 'Supply -SettingsPath with the settings.json you want restored at startup.'
-    }
-    $sourceSettings = if ($SettingsPath) { (Resolve-Path -LiteralPath $SettingsPath).Path } else { $configPath }
-    & (Join-Path $PSScriptRoot 'RawAccelService.exe') --validate $sourceSettings
-    if ($LASTEXITCODE -ne 0) { throw 'Settings validation failed; nothing was installed.' }
-    $settingsText = [IO.File]::ReadAllText($sourceSettings)
+    $startupSettings = Read-StartupSettings $SettingsPath $configPath (Join-Path $PSScriptRoot 'RawAccelService.exe')
 
     Stop-RawAccelService $service
     Set-ProtectedDirectory $installDirectory $false
@@ -126,9 +155,9 @@ try {
         }
         Set-ProtectedFile $target $false
     }
-    if ($SettingsPath -or !(Test-Path -LiteralPath $configPath)) {
+    if ($startupSettings.Save) {
         $pending = $configPath + '.pending'
-        [IO.File]::WriteAllText($pending, $settingsText, (New-Object Text.UTF8Encoding($false)))
+        [IO.File]::WriteAllText($pending, $startupSettings.Text, (New-Object Text.UTF8Encoding($false)))
         if (Test-Path -LiteralPath $configPath) { [IO.File]::Replace($pending, $configPath, $configPath + '.lastgood') }
         else { [IO.File]::Move($pending, $configPath) }
         Set-ProtectedFile $configPath $true
