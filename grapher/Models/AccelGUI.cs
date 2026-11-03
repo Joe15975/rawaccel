@@ -239,8 +239,12 @@ namespace grapher
         private void ResetDriverEventHandler(object sender, EventArgs e)
         {
             ButtonDelay(ResetButton);
-            Settings.ResetDriver();
-            RefreshActive();
+            try
+            {
+                Settings.ResetDriver();
+                RefreshActive();
+            }
+            catch (Exception ex) { MessageBox.Show(ex.Message, "Raw Accel reset failed"); }
         }
 
         private void OnButtonTimerTick(object sender, EventArgs e)

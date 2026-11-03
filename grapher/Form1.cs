@@ -62,7 +62,7 @@ namespace grapher
                 themeMenuItem.DropDownItems.Add(menuItem);
             }
 
-            menuStrip1.Items.AddRange(new ToolStripItem[] { themeMenuItem, HelpMenuItem });
+            menuStrip1.Items.AddRange(new ToolStripItem[] { themeMenuItem, BackgroundServiceMenu.Create(this), HelpMenuItem });
 
             Theme.Apply(this, menuStrip1);
 
@@ -361,8 +361,9 @@ namespace grapher
 
                 try
                 {
-                    if (!gui) lnk.Arguments = Constants.DefaultSettingsFileName;
+                    if (!gui) lnk.Arguments = "\"" + Constants.DefaultSettingsFileName + "\"";
                     lnk.TargetPath = $@"{Application.StartupPath}\{name}.exe";
+                    lnk.WorkingDirectory = Application.StartupPath;
                     lnk.Save();
                 }
                 finally

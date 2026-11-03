@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32929.385
@@ -24,6 +24,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "wrapper-deps", "wrapper-dep
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "wrapper-tests", "wrapper-tests\wrapper-tests.csproj", "{5DE4B0AC-D49B-43AE-B2B3-00C0A91D3C68}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "service", "service\service.csproj", "{CF05B1D1-1A68-426E-B321-30B54B6907DE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "service-tests", "service-tests\service-tests.csproj", "{52B74793-05A0-426A-98CF-D7693AB131D7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,6 +38,30 @@ Global
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{52B74793-05A0-426A-98CF-D7693AB131D7}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{52B74793-05A0-426A-98CF-D7693AB131D7}.Debug|Any CPU.Build.0 = Debug|x64
+		{52B74793-05A0-426A-98CF-D7693AB131D7}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{52B74793-05A0-426A-98CF-D7693AB131D7}.Debug|ARM64.Build.0 = Debug|ARM64
+		{52B74793-05A0-426A-98CF-D7693AB131D7}.Debug|x64.ActiveCfg = Debug|x64
+		{52B74793-05A0-426A-98CF-D7693AB131D7}.Debug|x64.Build.0 = Debug|x64
+		{52B74793-05A0-426A-98CF-D7693AB131D7}.Release|Any CPU.ActiveCfg = Release|x64
+		{52B74793-05A0-426A-98CF-D7693AB131D7}.Release|Any CPU.Build.0 = Release|x64
+		{52B74793-05A0-426A-98CF-D7693AB131D7}.Release|ARM64.ActiveCfg = Release|ARM64
+		{52B74793-05A0-426A-98CF-D7693AB131D7}.Release|ARM64.Build.0 = Release|ARM64
+		{52B74793-05A0-426A-98CF-D7693AB131D7}.Release|x64.ActiveCfg = Release|x64
+		{52B74793-05A0-426A-98CF-D7693AB131D7}.Release|x64.Build.0 = Release|x64
+		{CF05B1D1-1A68-426E-B321-30B54B6907DE}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{CF05B1D1-1A68-426E-B321-30B54B6907DE}.Debug|Any CPU.Build.0 = Debug|x64
+		{CF05B1D1-1A68-426E-B321-30B54B6907DE}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{CF05B1D1-1A68-426E-B321-30B54B6907DE}.Debug|ARM64.Build.0 = Debug|ARM64
+		{CF05B1D1-1A68-426E-B321-30B54B6907DE}.Debug|x64.ActiveCfg = Debug|x64
+		{CF05B1D1-1A68-426E-B321-30B54B6907DE}.Debug|x64.Build.0 = Debug|x64
+		{CF05B1D1-1A68-426E-B321-30B54B6907DE}.Release|Any CPU.ActiveCfg = Release|x64
+		{CF05B1D1-1A68-426E-B321-30B54B6907DE}.Release|Any CPU.Build.0 = Release|x64
+		{CF05B1D1-1A68-426E-B321-30B54B6907DE}.Release|ARM64.ActiveCfg = Release|ARM64
+		{CF05B1D1-1A68-426E-B321-30B54B6907DE}.Release|ARM64.Build.0 = Release|ARM64
+		{CF05B1D1-1A68-426E-B321-30B54B6907DE}.Release|x64.ActiveCfg = Release|x64
+		{CF05B1D1-1A68-426E-B321-30B54B6907DE}.Release|x64.Build.0 = Release|x64
 		{60D6C942-AC20-4C05-A2BE-54B5C966534D}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{60D6C942-AC20-4C05-A2BE-54B5C966534D}.Debug|Any CPU.Build.0 = Debug|x64
 		{60D6C942-AC20-4C05-A2BE-54B5C966534D}.Debug|Any CPU.Deploy.0 = Debug|x64

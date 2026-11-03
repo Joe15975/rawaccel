@@ -11,6 +11,7 @@ using System.Dynamic;
 using System.Linq;
 using grapher.Models.Theming;
 using grapher.Common;
+using RawAccel.ServiceSupport;
 
 namespace grapher.Models.Serialized
 {
@@ -152,8 +153,16 @@ namespace grapher.Models.Serialized
 
         public void ResetDriver()
         {
-            ActiveConfig = DriverConfig.GetDefault();
-            new Thread(() => DriverConfig.Deactivate()).Start();
+            if (ServiceClient.IsEnabled)
+            {
+                if (!TryActivate(DriverConfig.GetDefault(), out string error))
+                    throw new ApplicationException(error);
+            }
+            else
+            {
+                DriverConfig.Deactivate();
+                ActiveConfig = DriverConfig.GetDefault();
+            }
         }
 
         public void UpdateFieldsFromGUISettings()
@@ -183,14 +192,30 @@ namespace grapher.Models.Serialized
 
             if (errors == null)
             {
+                try
+                {
+                    if (ServiceClient.IsEnabled)
+                    {
+                        var response = ServiceClient.Send("apply", settings.ToJSON());
+                        if (!response.Success) { errors = response.Message; return false; }
+                    }
+                    else
+                    {
+                        settings.Activate();
+                        File.WriteAllText(Constants.DefaultSettingsFileName, settings.ToJSON());
+                    }
+                }
+                catch (Exception e)
+                {
+                    errors = e.Message;
+                    return false;
+                }
+
                 GuiSettings = MakeGUISettingsFromFields();
                 GuiSettings.Save();
 
                 UserConfig = settings;
                 ActiveConfig = settings;
-                File.WriteAllText(Constants.DefaultSettingsFileName, settings.ToJSON());
-
-                new Thread(() => ActiveConfig.Activate()).Start();
             }
 
             return errors == null;
@@ -300,6 +325,22 @@ namespace grapher.Models.Serialized
 
         private DriverConfig InitActiveAndGetUserConfig()
         {
+            // The service restores the machine-wide configuration. Opening the GUI must not
+            // overwrite it with a stale portable settings file or duplicate a boot-time write.
+            if (ServiceClient.IsEnabled)
+            {
+                ActiveConfig = DriverConfig.GetActive();
+                if (File.Exists(ServiceProtocol.SettingsPath))
+                {
+                    try
+                    {
+                        var saved = DriverConfig.Convert(File.ReadAllText(ServiceProtocol.SettingsPath));
+                        if (saved.Item2 == null) return saved.Item1;
+                    }
+                    catch (JsonException) { }
+                }
+                return ActiveConfig;
+            }
             var path = Constants.DefaultSettingsFileName;
             if (File.Exists(path))
             {

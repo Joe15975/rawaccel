@@ -22,7 +22,7 @@ Instructions for these are in the beginning of the [guide](Guide.md#installation
 No. Once settings are passed to the driver by the GUI, they stay in use until the computer is shut down.
 
 ## Does the GUI need to be run every time I start my PC?
-Yes. The driver itself does not store your settings. To enable them on PC start, run the GUI, or run `writer.exe settings.json`.
+The driver itself does not store your settings across reboots. Enable **Background > Start with Windows** in a build with the optional [background service](BackgroundService.md) to restore them automatically without opening the GUI. Otherwise, run the GUI or `writer.exe settings.json` each time you start the PC.
 
 ## I don't understand something, or have some other question.
 Read the guide to see if it answers your question. If not, join our [Discord](https://discord.gg/7pQh8zH) and ask.

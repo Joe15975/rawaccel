@@ -81,6 +81,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Windows.Forms.DataVisualization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -123,6 +124,9 @@
     <Compile Include="Models\Calculations\Data\IAccelData.cs" />
     <Compile Include="Models\Charts\AccelCharts.cs" />
     <Compile Include="Models\AccelGUI.cs" />
+    <Compile Include="Models\BackgroundServiceMenu.cs" />
+    <Compile Include="..\service-shared\ServiceProtocol.cs"><Link>Common\ServiceProtocol.cs</Link></Compile>
+    <Compile Include="..\service-shared\ServiceClient.cs"><Link>Common\ServiceClient.cs</Link></Compile>
     <Compile Include="Models\Charts\ChartState\ChartState.cs" />
     <Compile Include="Models\Charts\ChartState\ChartStateManager.cs" />
     <Compile Include="Models\Charts\ChartState\CombinedState.cs" />

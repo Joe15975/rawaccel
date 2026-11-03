@@ -124,9 +124,11 @@ namespace grapher.Common
         public const string YComponent = "Y";
 
         /// <summary> Default name of settings file. </summary>
-        public const string DefaultSettingsFileName = @"settings.json";
+        public static readonly string DefaultSettingsFileName = System.IO.Path.Combine(
+            System.AppDomain.CurrentDomain.BaseDirectory, "settings.json");
 
-        public const string GuiConfigFileName = ".config";
+        public static readonly string GuiConfigFileName = System.IO.Path.Combine(
+            System.AppDomain.CurrentDomain.BaseDirectory, ".config");
 
         /// <summary> Text to directionality panel title when panel is closed. </summary>
         public const string DirectionalityTitleClosed = "Anisotropy \u25BC";

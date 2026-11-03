@@ -10,6 +10,8 @@ Raw Accel is a Windows 10 & Windows 11 x86-64 driver which allows for the accele
 
 For an overview of everything Raw Accel has to offer, please see the [guide](doc/Guide.md). For questions, see the [FAQ](doc/FAQ.md) first.
 
+To restore settings automatically at Windows startup without opening the GUI, see the optional [background service](doc/BackgroundService.md).
+
 ## Development
 
 Development of Raw Accel is ongoing. See "User Interface 2.0" below for work on next release. Bug reports and pull requests are always welcome.  Join [our Discord server](https://discord.gg/7pQh8zH) if you want to stay updated with releases or say hello.

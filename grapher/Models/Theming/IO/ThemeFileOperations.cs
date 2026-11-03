@@ -13,7 +13,7 @@ namespace grapher.Models.Theming.IO
 
         public IEnumerable<ColorScheme> LoadThemes()
         {
-            ThemePath = Path.Combine(Environment.CurrentDirectory, "themes");
+            ThemePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "themes");
 
             var pathFound = Directory.Exists(ThemePath);
 

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <Platform Condition="'$(Platform)' == ''">x64</Platform>
+    <ProjectGuid>{CF05B1D1-1A68-426E-B321-30B54B6907DE}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>RawAccel.Service</RootNamespace>
+    <AssemblyName>RawAccelService</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <PlatformTarget>$(Platform)</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <OutputPath>$(SolutionDir)$(Platform)\$(Configuration)\</OutputPath>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+    <DebugType>pdbonly</DebugType>
+    <Optimize Condition="'$(Configuration)' == 'Release'">true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.ServiceProcess" />
+    <Reference Include="Newtonsoft.Json"><HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath></Reference>
+    <ProjectReference Include="..\wrapper\wrapper.vcxproj"><Project>{28A3656F-A1DE-405C-B547-191C32EC555F}</Project><Name>wrapper</Name></ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="RawAccelService.cs" />
+    <Compile Include="SettingsEngine.cs" />
+    <Compile Include="AccelerationDriver.cs" />
+    <Compile Include="..\service-shared\ServiceProtocol.cs"><Link>ServiceProtocol.cs</Link></Compile>
+    <Compile Include="..\service-shared\ServiceClient.cs"><Link>ServiceClient.cs</Link></Compile>
+    <None Include="App.config" />
+    <Content Include="Install-Service.ps1"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="CopyServiceRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <Copy SourceFiles="$(TargetPath);$(TargetPath).config;$(MSBuildProjectDirectory)\Install-Service.ps1" DestinationFolder="$(SolutionDir)signed" />
+  </Target>
+</Project>
