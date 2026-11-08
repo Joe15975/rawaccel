@@ -18,6 +18,7 @@ namespace grapher.Models.Options
             Option sensitivity,
             LockableOption yxRatio,
             Option rotation,
+            Option angleSnapping,
             Label lockXYLabel,
             AccelCharts accelCharts)
         {
@@ -37,6 +38,7 @@ namespace grapher.Models.Options
             Sensitivity = sensitivity;
             YToXRatio = yxRatio;
             Rotation = rotation;
+            AngleSnapping = angleSnapping;
             LockXYLabel = lockXYLabel;
             AccelCharts = accelCharts;
 
@@ -48,6 +50,7 @@ namespace grapher.Models.Options
 
             YToXRatio.SnapTo(Sensitivity);
             Rotation.SnapTo(YToXRatio);
+            AngleSnapping.SnapTo(Rotation);
 
             EnableWholeApplication();
         }
@@ -73,6 +76,8 @@ namespace grapher.Models.Options
         public LockableOption YToXRatio { get; }
 
         public Option Rotation { get; }
+
+        public Option AngleSnapping { get; }
 
         public AccelCharts AccelCharts { get; }
 
@@ -105,6 +110,7 @@ namespace grapher.Models.Options
             Sensitivity.SetActiveValue(Helper.GetSensitivityFactor(settings));
             YToXRatio.SetActiveValue(settings.yxOutputDPIRatio);
             Rotation.SetActiveValue(settings.rotation);
+            AngleSnapping.SetActiveValue(settings.snap);
             
             WholeVectorCheckBox.Checked = settings.inputSpeedArgs.combineMagnitudes;
             ByComponentVectorCheckBox.Checked = !settings.inputSpeedArgs.combineMagnitudes;
@@ -117,6 +123,25 @@ namespace grapher.Models.Options
             AccelCharts.SetLogarithmic(
                 OptionSetX.Options.AccelerationType.LogarithmicCharts,
                 OptionSetY.Options.AccelerationType.LogarithmicCharts);
+        }
+
+        public void UpdateActiveLabels(Profile settings)
+        {
+            Sensitivity.UpdateActiveValue(Helper.GetSensitivityFactor(settings));
+            YToXRatio.Option.UpdateActiveValue(settings.yxOutputDPIRatio);
+            Rotation.UpdateActiveValue(settings.rotation);
+            AngleSnapping.UpdateActiveValue(settings.snap);
+            OptionSetX.Options.UpdateActiveLabels(ref settings.argsX);
+            OptionSetY.Options.UpdateActiveLabels(ref settings.argsY);
+            Directionality.Domain.ActiveValueLabels.SetValues(settings.domainXY.x, settings.domainXY.y);
+            Directionality.Range.ActiveValueLabels.SetValues(settings.rangeXY.x, settings.rangeXY.y);
+            if (settings.inputSpeedArgs.combineMagnitudes)
+                Directionality.LpNorm.UpdateActiveValue(settings.inputSpeedArgs.lpNorm);
+            else
+                Directionality.LpNorm.ActiveValueLabel.SetValue("—");
+            AccelCharts.SetLogarithmic(
+                OptionSetX.Options.ActiveUsesLogarithmicCharts(ref settings.argsX),
+                OptionSetY.Options.ActiveUsesLogarithmicCharts(ref settings.argsY));
         }
 
         public void OnWholeClicked(object sender, EventArgs e)
@@ -234,6 +259,7 @@ namespace grapher.Models.Options
             OptionSetY.AlignActiveValues();
             Sensitivity.AlignActiveValues();
             Rotation.AlignActiveValues();
+            AngleSnapping.AlignActiveValues();
         }
 
         #endregion Methods

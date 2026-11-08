@@ -67,6 +67,11 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
+  <PropertyGroup Condition="'$(Platform)' == 'x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <OutputPath>bin\x64\$(Configuration)\</OutputPath>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="EndToEndTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

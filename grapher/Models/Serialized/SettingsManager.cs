@@ -56,6 +56,7 @@ namespace grapher.Models.Serialized
             }
 
             UserConfigField = InitActiveAndGetUserConfig();
+            RefreshConnectedDevices();
         }
 
         #endregion Constructors
@@ -68,6 +69,7 @@ namespace grapher.Models.Serialized
         private DriverConfig UserConfigField;
 
         private ManagedAccel ActiveAccelForGraphingField;
+        private int editingProfileIndex;
 
         #endregion Fields
 
@@ -93,19 +95,20 @@ namespace grapher.Models.Serialized
                     ActiveProfileNamesSet = new HashSet<string>(value.profiles.Select(p => p.name));
                 }
 
-                ActiveAccelForGraphingField = value.accels[0].CreateStatelessCopy();
+                editingProfileIndex = Math.Min(editingProfileIndex, value.profiles.Count - 1);
+                ActiveAccelForGraphingField = value.accels[editingProfileIndex].CreateStatelessCopy();
             }
         }
 
         public Profile ActiveProfile 
         {
-            get => ActiveConfigField.profiles[0];
-            private set => ActiveConfigField.SetProfileAt(0, value);
+            get => ActiveConfigField.profiles[editingProfileIndex];
+            private set => ActiveConfigField.SetProfileAt(editingProfileIndex, value);
         }
 
         public ManagedAccel ActiveAccel
         {
-            get => ActiveConfig.accels[0];
+            get => ActiveConfig.accels[editingProfileIndex];
         }
 
         /// <summary>
@@ -124,11 +127,21 @@ namespace grapher.Models.Serialized
 
         public Profile UserProfile 
         {
-            get => UserConfigField.profiles[0];
-            private set => UserConfigField.SetProfileAt(0, value);
+            get => UserConfigField.profiles[editingProfileIndex];
+            private set => UserConfigField.SetProfileAt(editingProfileIndex, value);
         }
 
         public HashSet<string> ActiveProfileNamesSet { get; private set; }
+        public int EditingProfileIndex { get { return editingProfileIndex; } }
+
+        public void SelectProfileForEditing(int index)
+        {
+            if (index < 0 || index >= ActiveConfig.profiles.Count || index >= UserConfig.profiles.Count)
+                throw new ArgumentOutOfRangeException(nameof(index));
+            editingProfileIndex = index;
+            ActiveAccelForGraphingField = ActiveConfig.accels[index].CreateStatelessCopy();
+            SetActiveHandles();
+        }
 
         public Field DpiField { get; private set; }
 
@@ -221,9 +234,23 @@ namespace grapher.Models.Serialized
             return errors == null;
         }
 
+        // Calibration already applied/committed through the service. Reload without writing again.
+        public void ReloadAfterCalibration(string verifiedJson, bool accepted)
+        {
+            var active = DriverConfig.Convert(verifiedJson);
+            if (active.Item2 != null) throw new InvalidDataException(active.Item2);
+            ActiveConfig = active.Item1;
+            if (accepted)
+            {
+                var user = DriverConfig.Convert(verifiedJson);
+                if (user.Item2 != null) throw new InvalidDataException(user.Item2);
+                UserConfig = user.Item1;
+            }
+            SetActiveHandles();
+        }
+
         public void SetHiddenOptions(Profile settings)
         {
-            settings.snap = UserProfile.snap;
             settings.maximumSpeed = UserProfile.maximumSpeed;
             settings.minimumSpeed = UserProfile.minimumSpeed;
             settings.lrOutputDPIRatio = UserProfile.lrOutputDPIRatio;
@@ -317,10 +344,15 @@ namespace grapher.Models.Serialized
 
         public void OnDeviceChangeMessage()
         {
-            SystemDevices = MultiHandleDevice.GetList();
-            SetActiveHandles();
+            RefreshConnectedDevices();
 
             DeviceChangeField?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void RefreshConnectedDevices()
+        {
+            SystemDevices = MultiHandleDevice.GetList();
+            SetActiveHandles();
         }
 
         private DriverConfig InitActiveAndGetUserConfig()

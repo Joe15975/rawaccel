@@ -12,6 +12,20 @@ namespace RawAccel.Service
         {
             try
             {
+                if (args.Length == 2 && args[0] == "--calibration-host")
+                    return StandaloneTrialHost.Run(args[1]);
+                if (args.Length == 1 && args[0] == "--check-driver")
+                {
+                    new AccelerationDriver().ReadActive();
+                    Console.WriteLine("Compatible Raw Accel driver is installed and accessible.");
+                    return 0;
+                }
+                if (args.Length == 1 && args[0] == "--check-ready")
+                {
+                    var response = ServiceClient.Send("status");
+                    Console.WriteLine(response.Message);
+                    return response.Success && response.SettingsApplied ? 0 : 1;
+                }
                 if (args.Length == 2 && args[0] == "--export")
                 {
                     string json = new AccelerationDriver().ReadActive();
@@ -43,7 +57,7 @@ namespace RawAccel.Service
                     ServiceBase.Run(new RawAccelService());
                     return 0;
                 }
-                Console.WriteLine("RawAccelService --export <settings.json> | --validate <settings.json> | --status | --apply <settings.json>\n" +
+                Console.WriteLine("RawAccelService --export <settings.json> | --validate <settings.json> | --status | --apply <settings.json> | --check-driver | --check-ready\n" +
                     "Install using Install-Service.ps1 from an administrator PowerShell.");
                 return args.Length == 0 ? 0 : 1;
             }

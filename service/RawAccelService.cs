@@ -116,7 +116,7 @@ namespace RawAccel.Service
                                 switch (request.Command)
                                 {
                                     case "status":
-                                        response = new ServiceResponse { Success = true, Message = engine.Status };
+                                        response = engine.GetStatus();
                                         break;
                                     case "apply":
                                         if (string.IsNullOrWhiteSpace(request.Settings))
@@ -124,6 +124,20 @@ namespace RawAccel.Service
                                         engine.ApplyAndSave(request.Settings);
                                         Log(engine.Status);
                                         response = new ServiceResponse { Success = true, Message = engine.Status };
+                                        break;
+                                    case "trial-begin":
+                                    case "trial-update":
+                                    case "trial-renew":
+                                    case "trial-query":
+                                    case "trial-cancel":
+                                    case "trial-commit":
+                                    case "trial-restore":
+                                    case "trial-recovery-query":
+                                    case "trial-recover":
+                                        string owner = null;
+                                        pipe.RunAsClient(() => { using (var identity = WindowsIdentity.GetCurrent())
+                                            owner = identity.User == null ? null : identity.User.Value; });
+                                        response = engine.TrialCommand(request, owner);
                                         break;
                                     default: throw new InvalidDataException("Unknown service command.");
                                 }
@@ -151,6 +165,8 @@ namespace RawAccel.Service
         {
             shutdown.Cancel();
             Task.WaitAll(new[] { listener, restore ?? Task.CompletedTask }, TimeSpan.FromSeconds(12));
+            try { engine.EndTrialForShutdown(); }
+            catch (Exception e) { engine.ReportFailure("Calibration recovery failed: " + e.Message); Log(engine.Status); }
             Log("Service stopped. Applied driver settings remain active until reset or reboot.");
         }
 

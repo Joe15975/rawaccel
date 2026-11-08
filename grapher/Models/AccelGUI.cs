@@ -56,6 +56,9 @@ namespace grapher
 
             RefreshUser();
             RefreshActive();
+            // Keep a saved JSON edit ready to apply while the active label shows the driver value.
+            if (Settings.UserProfile.snap != Settings.ActiveProfile.snap)
+                ApplyOptions.AngleSnapping.Field.SetToEntered(Settings.UserProfile.snap);
             SetupButtons();
 
             // TODO: The below removes an overlapping form from the anisotropy panel.
@@ -118,8 +121,10 @@ namespace grapher
         public Profile MakeSettingsFromFields()
         {
             var settings = new Profile();
+            settings.name = Settings.UserProfile.name;
 
             settings.rotation = ApplyOptions.Rotation.Field.Data;
+            settings.snap = ApplyOptions.AngleSnapping.Field.Data;
             settings.outputDPI = Helper.CalculatOutputDPI(ApplyOptions.Sensitivity.Field.Data);
 
             settings.yxOutputDPIRatio = ApplyOptions.YToXRatio.Value;
@@ -170,6 +175,13 @@ namespace grapher
         public void RefreshActive()
         {
             UpdateShownActiveValues(Settings.ActiveProfile);
+            UpdateGraph();
+        }
+
+        public void RefreshActivePreservingEdits()
+        {
+            AccelCharts.ShowActive(Settings.ActiveProfile);
+            ApplyOptions.UpdateActiveLabels(Settings.ActiveProfile);
             UpdateGraph();
         }
 
@@ -277,6 +289,7 @@ namespace grapher
 
         private void OnChartTimerTick(object sender, EventArgs e)
         {
+            if (MouseWatcher.PauseCharts) return;
             AccelCharts.DrawLastMovement();
             MouseWatcher.UpdateLastMove();
         }

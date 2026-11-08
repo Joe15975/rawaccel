@@ -1,5 +1,6 @@
 ﻿using grapher.Common;
 using grapher.Models.Serialized;
+using grapher.Models.Calibration;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,6 +11,10 @@ namespace grapher.Models.Mouse
 {
     public class MouseWatcher
     {
+        public event Action<MotionSample> CalibrationSample;
+        public event Action<string> CalibrationError;
+        public bool PauseCharts { get; set; }
+        public IntPtr LastMovingDevice { get; private set; }
         #region External
         /// <summary>
         /// Enumeration containing HID usage page flags.
@@ -746,11 +751,38 @@ namespace grapher.Models.Mouse
 
         public void ReadMouseMove(Message message)
         {
+            long receiptTicks = System.Diagnostics.Stopwatch.GetTimestamp();
             RawInput rawInput;
             int size = Marshal.SizeOf(typeof(RawInput));
-            _ = GetRawInputData(message.LParam, RawInputCommand.Input, out rawInput, ref size, Marshal.SizeOf(typeof(RAWINPUTHEADER)));
+            int read = GetRawInputData(message.LParam, RawInputCommand.Input, out rawInput, ref size, Marshal.SizeOf(typeof(RAWINPUTHEADER)));
+            if (read < 0 || read < Marshal.SizeOf(typeof(RAWINPUTHEADER)))
+            {
+                CalibrationError?.Invoke("Could not read mouse input.");
+                return;
+            }
+            if (rawInput.Header.Type != RawInputType.Mouse) return;
+            if (read < Marshal.SizeOf(typeof(RawInput)))
+            {
+                CalibrationError?.Invoke("Incomplete mouse input.");
+                return;
+            }
 
+            ProcessMouseInput(rawInput, receiptTicks);
+        }
+
+        private void ProcessMouseInput(RawInput rawInput, long receiptTicks)
+        {
             bool relative = !rawInput.Data.Mouse.Flags.HasFlag(RawMouseFlags.MoveAbsolute);
+            if (relative && rawInput.Header.Device != IntPtr.Zero &&
+                (rawInput.Data.Mouse.LastX != 0 || rawInput.Data.Mouse.LastY != 0))
+                LastMovingDevice = rawInput.Header.Device;
+            CalibrationSample?.Invoke(new MotionSample {
+                Ticks = receiptTicks, Device = rawInput.Header.Device,
+                X = rawInput.Data.Mouse.LastX, Y = rawInput.Data.Mouse.LastY,
+                Flags = (ushort)rawInput.Data.Mouse.Flags,
+                Buttons = (ushort)rawInput.Data.Mouse._Data.ButtonFlags, Relative = relative
+            });
+            if (PauseCharts) return;
 
             bool deviceMatch = false;
             foreach (var (handle, normalized) in SettingsManager.ActiveNormTaggedHandles)

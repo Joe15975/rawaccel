@@ -59,6 +59,38 @@ function Assert-PlainPath([string]$Path) {
     }
 }
 
+function Assert-DriverAvailable([string]$ServiceExecutable) {
+    $available = $false
+    try {
+        & $ServiceExecutable --check-driver | Out-Host
+        $available = $LASTEXITCODE -eq 0
+    }
+    catch { Write-Verbose $_.Exception.Message }
+    if (!$available) {
+        throw 'The Raw Accel driver is unavailable or incompatible. Install the matching official Raw Accel driver and restart Windows before installing the background service. Nothing was installed.'
+    }
+}
+
+function Wait-ServiceReady([string]$ServiceExecutable, [ValidateRange(0, 300)][int]$TimeoutSeconds = 75) {
+    $timer = [Diagnostics.Stopwatch]::StartNew()
+    $lastStatus = 'The service did not respond.'
+    do {
+        $ready = $false
+        try {
+            $lastStatus = (& $ServiceExecutable --check-ready 2>&1 | Out-String).Trim()
+            $ready = $LASTEXITCODE -eq 0
+        }
+        catch { $lastStatus = $_.Exception.Message }
+        if ($ready) {
+            Write-Output $lastStatus
+            return
+        }
+        if ($timer.Elapsed.TotalSeconds -ge $TimeoutSeconds) { break }
+        Start-Sleep -Milliseconds 500
+    } while ($true)
+    throw "The service was registered but did not confirm that startup settings were restored: $lastStatus Check $env:ProgramData\RawAccel\service.log. Correct the problem and rerun this installer."
+}
+
 function Set-ProtectedFile([string]$Path, [bool]$ServiceMayWrite) {
     if (!(Test-Path -LiteralPath $Path -PathType Leaf)) { return }
     $acl = New-Object System.Security.AccessControl.FileSecurity
@@ -139,6 +171,7 @@ try {
             throw "Missing $name. Run this script beside the complete service build output."
         }
     }
+    Assert-DriverAvailable (Join-Path $PSScriptRoot 'RawAccelService.exe')
     $startupSettings = Read-StartupSettings $SettingsPath $configPath (Join-Path $PSScriptRoot 'RawAccelService.exe')
 
     Stop-RawAccelService $service
@@ -179,6 +212,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Could not enable service recovery.' }
     Start-Service -Name $serviceName
     (Get-Service -Name $serviceName).WaitForStatus('Running', [TimeSpan]::FromSeconds(15))
-    Write-Output "Installed and started. Startup settings: $configPath"
+    Wait-ServiceReady $executable
+    Write-Output "Installed, started, and restored startup settings: $configPath"
 }
 catch { Write-Error $_ -ErrorAction Continue; exit 1 }

@@ -22,7 +22,7 @@ namespace grapher
         {
             InitializeComponent();
 
-            Version driverVersion = VersionHelper.ValidOrThrow();
+            Version driverVersion = FirstRunSetup.EnsureDriver();
 
             ToolStripMenuItem HelpMenuItem = new ToolStripMenuItem("&Help");
 
@@ -97,6 +97,7 @@ namespace grapher
                 sensitivityBoxX,
                 VertHorzRatioBox,
                 rotationBox,
+                angleSnappingBox,
                 inCapBoxXClassic,
                 inCapBoxYClassic,
                 outCapBoxXClassic,
@@ -151,6 +152,7 @@ namespace grapher
                 sensitivityLabel,
                 VertHorzRatioLabel,
                 rotationLabel,
+                angleSnappingLabel,
                 inCapLabelXClassic,
                 inCapLabelYClassic,
                 outCapLabelXClassic,
@@ -196,6 +198,7 @@ namespace grapher
                 SensitivityMultiplierActiveLabel,
                 VertHorzRatioActiveLabel,
                 RotationActiveLabel,
+                AngleSnappingActiveLabel,
                 InCapActiveXLabelClassic,
                 InCapActiveYLabelClassic,
                 OutCapActiveXLabelClassic,
@@ -258,6 +261,157 @@ namespace grapher
                 LutApplyActiveXLabel,
                 LutApplyActiveYLabel);
 
+            var profilesMenu = new ToolStripMenuItem("&Profiles");
+            profilesMenu.DropDownOpening += (s, e) => PopulateProfilesMenu(profilesMenu);
+            var editProfile = new ToolStripMenuItem("Edit acceleration profile");
+            editProfile.DropDownOpening += (s, e) =>
+            {
+                editProfile.DropDownItems.Clear();
+                for (int i = 0; i < AccelGUI.Settings.ActiveConfig.profiles.Count; i++)
+                {
+                    int index = i;
+                    var item = new ToolStripMenuItem(AccelGUI.Settings.ActiveConfig.profiles[i].name)
+                    { Checked = i == AccelGUI.Settings.EditingProfileIndex };
+                    item.Click += (sender, args) =>
+                    {
+                        if (index == AccelGUI.Settings.EditingProfileIndex) return;
+                        if (MessageBox.Show(this, "Switch the profile being edited? Unapplied field edits will be discarded.",
+                            "Edit acceleration profile", MessageBoxButtons.YesNo) != DialogResult.Yes) return;
+                        AccelGUI.Settings.SelectProfileForEditing(index);
+                        AccelGUI.RefreshActive();
+                    };
+                    editProfile.DropDownItems.Add(item);
+                }
+            };
+            advancedToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] {
+                new ToolStripSeparator(),
+                new ToolStripMenuItem("&Calibrate", null, (s, e) => OpenCalibration()),
+                profilesMenu,
+                editProfile
+            });
+
+        }
+
+        private static string ProfilesDirectory => Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RawAccel", "Profiles");
+
+        private void OpenCalibration()
+        {
+            try
+            {
+                AccelGUI.Settings.RefreshConnectedDevices();
+                using (var form = new CalibrationForm(AccelGUI.Settings, AccelGUI.MouseWatcher))
+                {
+                    Theme.Apply(form);
+                    AccelGUI.MouseWatcher.PauseCharts = true;
+                    try { form.ShowDialog(this); }
+                    finally { AccelGUI.MouseWatcher.PauseCharts = false; }
+                    if (form.OutcomeUncertain)
+                        throw new InvalidOperationException("Calibration recovery could not be verified. Check Background > Service status and the active driver settings before applying another configuration.");
+                    if (form.SettingsAccepted)
+                    {
+                        if (RawAccel.ServiceSupport.SettingsFingerprint.Compute(DriverConfig.GetActive().ToJSON()) !=
+                            RawAccel.ServiceSupport.SettingsFingerprint.Compute(form.AcceptedSettingsJson))
+                            throw new InvalidOperationException("Active settings changed after calibration. Reopen Raw Accel to reload them.");
+                        AccelGUI.Settings.ReloadAfterCalibration(form.AcceptedSettingsJson, true);
+                        AccelGUI.Settings.SelectProfileForEditing(form.SelectedProfileIndex);
+                        AccelGUI.RefreshUser();
+                        AccelGUI.RefreshActive();
+                    }
+                    else if (form.RecoveryRestored)
+                    {
+                        string current = DriverConfig.GetActive().ToJSON();
+                        if (RawAccel.ServiceSupport.SettingsFingerprint.Compute(current) !=
+                            RawAccel.ServiceSupport.SettingsFingerprint.Compute(form.VerifiedRecoverySettingsJson))
+                            throw new InvalidOperationException("Active settings changed after recovery. Reopen Raw Accel to reload them.");
+                        AccelGUI.Settings.ReloadAfterCalibration(current, false);
+                        AccelGUI.RefreshActivePreservingEdits();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, ex.Message, "Calibration could not finish", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void PopulateProfilesMenu(ToolStripMenuItem menu)
+        {
+            menu.DropDownItems.Clear();
+            menu.DropDownItems.Add("Save applied settings as...", null, (s, e) => SaveProfile());
+            menu.DropDownItems.Add(new ToolStripSeparator());
+            try
+            {
+                Directory.CreateDirectory(ProfilesDirectory);
+                var paths = Directory.GetFiles(ProfilesDirectory, "*.json").OrderBy(Path.GetFileName).ToArray();
+                if (paths.Length == 0)
+                    menu.DropDownItems.Add(new ToolStripMenuItem("No saved profiles") { Enabled = false });
+                var deleteMenu = new ToolStripMenuItem("Delete profile");
+                foreach (var path in paths)
+                {
+                    var name = Path.GetFileNameWithoutExtension(path);
+                    menu.DropDownItems.Add(name, null, (s, e) => ActivateProfile(path));
+                    deleteMenu.DropDownItems.Add(name, null, (s, e) => DeleteProfile(path));
+                }
+                if (paths.Length > 0)
+                {
+                    menu.DropDownItems.Add(new ToolStripSeparator());
+                    menu.DropDownItems.Add(deleteMenu);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, ex.Message, "Unable to list profiles");
+            }
+        }
+
+        private void SaveProfile()
+        {
+            try
+            {
+                Directory.CreateDirectory(ProfilesDirectory);
+                using (var dialog = new SaveFileDialog { InitialDirectory = ProfilesDirectory, Filter = "JSON files (*.json)|*.json", DefaultExt = "json", AddExtension = true, Title = "Save applied settings as profile" })
+                {
+                    dialog.FileOk += (s, e) =>
+                    {
+                        if (!string.Equals(Path.GetDirectoryName(dialog.FileName), ProfilesDirectory, StringComparison.OrdinalIgnoreCase))
+                        {
+                            MessageBox.Show(this, "Save profiles in the Profiles folder so they appear in the menu.", "Save profile");
+                            e.Cancel = true;
+                        }
+                    };
+                    if (dialog.ShowDialog(this) == DialogResult.OK)
+                        File.WriteAllText(dialog.FileName, AccelGUI.Settings.ActiveConfig.ToJSON());
+                }
+            }
+            catch (Exception ex) { MessageBox.Show(this, ex.Message, "Unable to save profile"); }
+        }
+
+        private void ActivateProfile(string path)
+        {
+            if (MessageBox.Show(this, "Apply this profile? Any unapplied edits will be discarded.", "Switch profile", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                return;
+            try
+            {
+                var (config, error) = DriverConfig.Convert(File.ReadAllText(path));
+                if (error != null || !AccelGUI.Settings.TryActivate(config, out error))
+                {
+                    MessageBox.Show(this, error, "Unable to apply profile");
+                    return;
+                }
+                AccelGUI.RefreshUser();
+                AccelGUI.RefreshActive();
+                AccelGUI.Settings.SetActiveHandles();
+            }
+            catch (Exception ex) { MessageBox.Show(this, ex.Message, "Unable to apply profile"); }
+        }
+
+        private void DeleteProfile(string path)
+        {
+            if (MessageBox.Show(this, $"Delete profile '{Path.GetFileNameWithoutExtension(path)}'?", "Delete profile", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                return;
+            try { File.Delete(path); }
+            catch (Exception ex) { MessageBox.Show(this, ex.Message, "Unable to delete profile"); }
         }
 
         #endregion Constructor
@@ -387,6 +541,7 @@ namespace grapher
 
         private void RawAcceleration_Shown(object sender, EventArgs e)
         {
+            FirstRunSetup.EnsureServiceAsync(this);
             var sizeDirect = chartsPanel.GetPreferredSize(Constants.MaxSize);
             Console.WriteLine($"[BeginInvoke] Direct size: {sizeDirect}");
 

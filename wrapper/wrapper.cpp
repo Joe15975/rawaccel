@@ -239,7 +239,7 @@ public ref struct Profile
     [JsonProperty("Degrees of angle snapping")]
     double snap;
 
-    [JsonIgnore]
+    [JsonProperty("Input Speed Minimum", Required = Required::Default)]
     double minimumSpeed;
     [JsonProperty("Input Speed Cap")]
     double maximumSpeed;
@@ -747,7 +747,7 @@ public:
 
         DeviceErrors^ devErrors = gcnew DeviceErrors(devices);
         if (!devErrors->Empty()) {
-            sb->Append(profErrors->ToString());
+            sb->Append(devErrors->ToString());
         }
 
         devices->RemoveAt(devices->Count - 1);

@@ -291,6 +291,39 @@ namespace grapher
             LutApply.SetActiveValue(args.gain);
         }
 
+        // Update the read-only active column without changing pending controls or field data.
+        public void UpdateActiveLabels(ref AccelArgs args)
+        {
+            AccelTypeActiveValue.SetValue(AccelTypeFromSettings(ref args).ActiveName);
+            GainSwitch.ActiveValueLabel.SetValue(args.gain ? "Gain" : "Legacy");
+            ClassicCap.Slope.UpdateActiveValue(args.acceleration);
+            ClassicCap.In.UpdateActiveValue(args.cap.x);
+            ClassicCap.Out.UpdateActiveValue(args.cap.y);
+            ClassicCap.CapTypeOptions.ActiveValueLabel.SetValue(CapTypeOptions.CapTypeOptionFromSettings(args.capMode).Name);
+            PowerCap.Slope.UpdateActiveValue(args.scale);
+            PowerCap.In.UpdateActiveValue(args.cap.x);
+            PowerCap.Out.UpdateActiveValue(args.cap.y);
+            PowerCap.CapTypeOptions.ActiveValueLabel.SetValue(CapTypeOptions.CapTypeOptionFromSettings(args.capMode).Name);
+            InputJump.UpdateActiveValue(args.cap.x);
+            OutputJump.UpdateActiveValue(args.cap.y);
+            OutputOffset.UpdateActiveValue(args.outputOffset);
+            InputOffset.UpdateActiveValue(args.inputOffset);
+            DecayRate.UpdateActiveValue(args.decayRate);
+            Gammma.UpdateActiveValue(args.gamma);
+            Smooth.UpdateActiveValue(args.smooth);
+            Limit.UpdateActiveValue(args.mode == AccelMode.synchronous ? args.motivity : args.limit);
+            PowerClassic.UpdateActiveValue(args.exponentClassic);
+            Exponent.UpdateActiveValue(args.exponentPower);
+            SyncSpeed.UpdateActiveValue(args.syncSpeed);
+            LutPanel.SetActiveValues(args.data, args.length, args.mode, false);
+            LutApply.ActiveValueLabel.SetValue(LutApplyOptions.ApplyOptionFromSettings(args.gain).Name);
+        }
+
+        public bool ActiveUsesLogarithmicCharts(ref AccelArgs args)
+        {
+            return AccelTypeFromSettings(ref args).LogarithmicCharts;
+        }
+
         public void ShowFull()
         {
             if (ShowingDefault)

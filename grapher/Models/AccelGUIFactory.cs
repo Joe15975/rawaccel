@@ -49,6 +49,7 @@ namespace grapher.Models
             ThemeableTextBox sensitivityBoxX,
             ThemeableTextBox sensitivityBoxY,
             ThemeableTextBox rotationBox,
+            ThemeableTextBox angleSnappingBox,
             ThemeableTextBox inCapBoxXClassic,
             ThemeableTextBox inCapBoxYClassic,
             ThemeableTextBox outCapBoxXClassic,
@@ -103,6 +104,7 @@ namespace grapher.Models
             Label sensitivityLabel,
             Label yxRatioLabel,
             Label rotationLabel,
+            Label angleSnappingLabel,
             Label inCapLabelXClassic,
             Label inCapLabelYClassic,
             Label outCapLabelXClassic,
@@ -148,6 +150,7 @@ namespace grapher.Models
             Label sensitivityActiveLabel,
             Label yxRatioActiveLabel,
             Label rotationActiveLabel,
+            Label angleSnappingActiveLabel,
             Label inCapActiveXLabelClassic,
             Label inCapActiveYLabelClassic,
             Label outCapActiveXLabelClassic,
@@ -257,6 +260,13 @@ namespace grapher.Models
                 0,
                 new ActiveValueLabel(rotationActiveLabel, activeValueTitleX),
                 "Rotation");
+
+            var angleSnapping = new Option(
+                new Field(angleSnappingBox, form, 0, 0, 45),
+                angleSnappingLabel,
+                new ActiveValueLabel(angleSnappingActiveLabel, activeValueTitleX),
+                0);
+            angleSnapping.SetName("Angle snap (°)");
 
             var optionSetYLeft = activeValueTitleX.Left + activeValueTitleX.Width;
 
@@ -659,13 +669,13 @@ namespace grapher.Models
             var optionsSetX = new AccelOptionSet(
                 optionSetXTitle,
                 activeValueTitleX,
-                rotationBox.Top + rotationBox.Height + Constants.OptionVerticalSeperation,
+                angleSnappingBox.Bottom + Constants.OptionVerticalSeperation,
                 accelerationOptionsX);
 
             var optionsSetY = new AccelOptionSet(
                 optionSetYTitle,
                 activeValueTitleY,
-                rotationBox.Top + rotationBox.Height + Constants.OptionVerticalSeperation,
+                angleSnappingBox.Bottom + Constants.OptionVerticalSeperation,
                 accelerationOptionsY);
 
             var directionalOptions = new DirectionalityOptions(
@@ -689,6 +699,7 @@ namespace grapher.Models
                 sensitivity,
                 yxRatio,
                 rotation,
+                angleSnapping,
                 lockXYLabel,
                 accelCharts);
 

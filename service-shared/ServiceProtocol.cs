@@ -4,6 +4,9 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Security.Cryptography;
+using Newtonsoft.Json.Linq;
+using System.Linq;
 
 namespace RawAccel.ServiceSupport
 {
@@ -11,12 +14,52 @@ namespace RawAccel.ServiceSupport
     {
         public string Command { get; set; }
         public string Settings { get; set; }
+        public string LeaseId { get; set; }
+        public string RequestId { get; set; }
+        public string ExpectedFingerprint { get; set; }
     }
 
     public sealed class ServiceResponse
     {
         public bool Success { get; set; }
+        public bool SettingsApplied { get; set; }
         public string Message { get; set; }
+        public int TrialProtocolVersion { get; set; }
+        public string LeaseId { get; set; }
+        public string ActiveSettings { get; set; }
+        public string BaselineSettings { get; set; }
+        public string TrialState { get; set; }
+        public string LeaseExpiresUtc { get; set; }
+        public string StorageIdentity { get; set; }
+        public bool RecoverySavedChanged { get; set; }
+    }
+
+    public static class SettingsFingerprint
+    {
+        private static JToken Canonical(JToken token)
+        {
+            if (token is JObject obj)
+                return new JObject(obj.Properties().OrderBy(p => p.Name, StringComparer.Ordinal)
+                    .Select(p => new JProperty(p.Name, Canonical(p.Value))));
+            if (token is JArray array) return new JArray(array.Select(Canonical));
+            if (token.Type == JTokenType.Float)
+            {
+                double value = token.Value<double>();
+                if (double.IsNaN(value) || double.IsInfinity(value))
+                    throw new InvalidDataException("Settings contain a non-finite number.");
+            }
+            if (token.Type == JTokenType.String &&
+                (token.Value<string>() == "NaN" || token.Value<string>() == "Infinity" || token.Value<string>() == "-Infinity"))
+                throw new InvalidDataException("Settings contain a non-finite number.");
+            return token.DeepClone();
+        }
+
+        public static string Compute(string json)
+        {
+            string canonical = Canonical(JToken.Parse(json)).ToString(Formatting.None);
+            using (var hash = SHA256.Create())
+                return BitConverter.ToString(hash.ComputeHash(Encoding.UTF8.GetBytes(canonical))).Replace("-", "").ToLowerInvariant();
+        }
     }
 
     public static class ServiceProtocol
@@ -24,6 +67,19 @@ namespace RawAccel.ServiceSupport
         public const string ServiceName = "RawAccelService";
         public const string PipeName = "RawAccel.Settings.v1";
         public const int MaximumMessageBytes = 1024 * 1024;
+        public static string TextFingerprint(string text)
+        {
+            using (var hash = SHA256.Create())
+                return BitConverter.ToString(hash.ComputeHash(Encoding.UTF8.GetBytes(text))).Replace("-", "").ToLowerInvariant();
+        }
+        public static string PortableIdentity(string path)
+        {
+            return TextFingerprint(Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar).ToUpperInvariant());
+        }
+        public static string StandalonePipeName(string sid)
+        {
+            return "RawAccel.Calibration." + TextFingerprint(sid).Substring(0, 32);
+        }
         public static readonly string DataDirectory = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RawAccel");
         public static readonly string SettingsPath = Path.Combine(DataDirectory, "settings.json");

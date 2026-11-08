@@ -111,7 +111,7 @@ namespace grapher.Models.Options.LUT
             // Nothing to do here.
         }
 
-        public void SetActiveValues(IEnumerable<float> rawData, int length, AccelMode mode)
+        public void SetActiveValues(IEnumerable<float> rawData, int length, AccelMode mode, bool populateEntry = true)
         {
             if (mode == AccelMode.lut && length > 1 && rawData.First() != 0)
             {
@@ -128,7 +128,7 @@ namespace grapher.Models.Options.LUT
                 }
                 ActiveValuesTextBox.Text = PointsToActiveValuesText(points, pointsLen);
 
-                if (string.IsNullOrWhiteSpace(PointsTextBox.Text))
+                if (populateEntry && string.IsNullOrWhiteSpace(PointsTextBox.Text))
                 {
                     PointsTextBox.Text = PointsToEntryTextBoxText(points, pointsLen);
                 }

@@ -178,6 +178,7 @@ namespace grapher
             this.AccelerationActiveLabelX = new System.Windows.Forms.Label();
             this.AccelTypeActiveLabelX = new System.Windows.Forms.Label();
             this.RotationActiveLabel = new System.Windows.Forms.Label();
+            this.AngleSnappingActiveLabel = new System.Windows.Forms.Label();
             this.VertHorzRatioActiveLabel = new System.Windows.Forms.Label();
             this.SensitivityMultiplierActiveLabel = new System.Windows.Forms.Label();
             this.ActiveValueTitle = new System.Windows.Forms.Label();
@@ -194,6 +195,7 @@ namespace grapher
             this.inCapLabelXClassic = new System.Windows.Forms.Label();
             this.constantOneLabelX = new System.Windows.Forms.Label();
             this.rotationLabel = new System.Windows.Forms.Label();
+            this.angleSnappingLabel = new System.Windows.Forms.Label();
             this.sensitivityLabel = new System.Windows.Forms.Label();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.graphsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -263,6 +265,7 @@ namespace grapher
             this.inCapBoxXClassic = new grapher.Models.Theming.Controls.ThemeableTextBox();
             this.accelerationBoxX = new grapher.Models.Theming.Controls.ThemeableTextBox();
             this.rotationBox = new grapher.Models.Theming.Controls.ThemeableTextBox();
+            this.angleSnappingBox = new grapher.Models.Theming.Controls.ThemeableTextBox();
             this.sensitivityBoxX = new grapher.Models.Theming.Controls.ThemeableTextBox();
             this.accelTypeDropX = new grapher.Models.Theming.Controls.ThemeableComboBox();
             this.chartContainer = new System.Windows.Forms.TableLayoutPanel();
@@ -407,6 +410,7 @@ namespace grapher
             this.optionsPanel.Controls.Add(this.AccelerationActiveLabelX);
             this.optionsPanel.Controls.Add(this.AccelTypeActiveLabelX);
             this.optionsPanel.Controls.Add(this.RotationActiveLabel);
+            this.optionsPanel.Controls.Add(this.AngleSnappingActiveLabel);
             this.optionsPanel.Controls.Add(this.VertHorzRatioActiveLabel);
             this.optionsPanel.Controls.Add(this.SensitivityMultiplierActiveLabel);
             this.optionsPanel.Controls.Add(this.ActiveValueTitle);
@@ -434,6 +438,8 @@ namespace grapher
             this.optionsPanel.Controls.Add(this.accelerationBoxX);
             this.optionsPanel.Controls.Add(this.rotationLabel);
             this.optionsPanel.Controls.Add(this.rotationBox);
+            this.optionsPanel.Controls.Add(this.angleSnappingLabel);
+            this.optionsPanel.Controls.Add(this.angleSnappingBox);
             this.optionsPanel.Controls.Add(this.sensitivityLabel);
             this.optionsPanel.Controls.Add(this.sensitivityBoxX);
             this.optionsPanel.Controls.Add(this.accelTypeDropX);
@@ -1272,7 +1278,7 @@ namespace grapher
             this.ByComponentXYLock.AutoSize = true;
             this.ByComponentXYLock.Checked = true;
             this.ByComponentXYLock.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ByComponentXYLock.Location = new System.Drawing.Point(283, 123);
+            this.ByComponentXYLock.Location = new System.Drawing.Point(283, 147);
             this.ByComponentXYLock.Name = "ByComponentXYLock";
             this.ByComponentXYLock.Size = new System.Drawing.Size(15, 14);
             this.ByComponentXYLock.TabIndex = 20;
@@ -1439,6 +1445,14 @@ namespace grapher
             this.RotationActiveLabel.Size = new System.Drawing.Size(13, 13);
             this.RotationActiveLabel.TabIndex = 118;
             this.RotationActiveLabel.Text = "0";
+            //
+            // AngleSnappingActiveLabel
+            //
+            this.AngleSnappingActiveLabel.AutoSize = true;
+            this.AngleSnappingActiveLabel.Location = new System.Drawing.Point(197, 129);
+            this.AngleSnappingActiveLabel.Name = "AngleSnappingActiveLabel";
+            this.AngleSnappingActiveLabel.Size = new System.Drawing.Size(13, 13);
+            this.AngleSnappingActiveLabel.Text = "0";
             // 
             // VertHorzRatioActiveLabel
             // 
@@ -1594,6 +1608,14 @@ namespace grapher
             this.rotationLabel.Size = new System.Drawing.Size(47, 13);
             this.rotationLabel.TabIndex = 87;
             this.rotationLabel.Text = "Rotation";
+            //
+            // angleSnappingLabel
+            //
+            this.angleSnappingLabel.AutoSize = true;
+            this.angleSnappingLabel.Location = new System.Drawing.Point(0, 129);
+            this.angleSnappingLabel.Name = "angleSnappingLabel";
+            this.angleSnappingLabel.Size = new System.Drawing.Size(96, 13);
+            this.angleSnappingLabel.Text = "Angle snap (°)";
             // 
             // sensitivityLabel
             // 
@@ -2341,6 +2363,15 @@ namespace grapher
             this.rotationBox.Name = "rotationBox";
             this.rotationBox.Size = new System.Drawing.Size(76, 20);
             this.rotationBox.TabIndex = 13;
+            //
+            // angleSnappingBox
+            //
+            this.angleSnappingBox.Location = new System.Drawing.Point(106, 126);
+            this.angleSnappingBox.Name = "angleSnappingBox";
+            this.angleSnappingBox.Size = new System.Drawing.Size(76, 20);
+            this.angleSnappingBox.TabIndex = 14;
+            this.angleSnappingBox.AccessibleName = "Angle snapping in degrees";
+            this.angleSnappingBox.AccessibleDescription = "Snap movements near the horizontal or vertical axis. Range: 0 to 45 degrees; 0 disables snapping.";
             // 
             // sensitivityBoxX
             // 
@@ -2443,6 +2474,7 @@ namespace grapher
         private System.Windows.Forms.Label AccelerationActiveLabelX;
         private System.Windows.Forms.Label AccelTypeActiveLabelX;
         private System.Windows.Forms.Label RotationActiveLabel;
+        private System.Windows.Forms.Label AngleSnappingActiveLabel;
         private System.Windows.Forms.Label VertHorzRatioActiveLabel;
         private System.Windows.Forms.Label SensitivityMultiplierActiveLabel;
         private System.Windows.Forms.Label ActiveValueTitle;
@@ -2470,6 +2502,8 @@ namespace grapher
         private grapher.Models.Theming.Controls.ThemeableTextBox accelerationBoxX;
         private System.Windows.Forms.Label rotationLabel;
         private grapher.Models.Theming.Controls.ThemeableTextBox rotationBox;
+        private System.Windows.Forms.Label angleSnappingLabel;
+        private grapher.Models.Theming.Controls.ThemeableTextBox angleSnappingBox;
         private System.Windows.Forms.Label sensitivityLabel;
         private grapher.Models.Theming.Controls.ThemeableTextBox sensitivityBoxX;
         private  grapher.Models.Theming.Controls.ThemeableComboBox accelTypeDropX;

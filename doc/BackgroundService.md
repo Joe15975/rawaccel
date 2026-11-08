@@ -2,11 +2,13 @@
 
 The optional **Raw Accel Background Service** restores your saved mouse configuration at boot, before sign-in, without opening the GUI. The existing kernel driver still processes mouse movement; the service only loads and saves configuration and otherwise waits idle.
 
+The **Calibrate** command uses this service for temporary trials, timed restoration and explicit result acceptance. See [Pointing calibration](Calibration.md) for supported profiles, standalone behavior and recovery-conflict instructions. Trials do not change startup settings until accepted.
+
 ## Enable from the GUI
 
 1. Install the official Raw Accel driver and restart if necessary, as usual.
-2. Run `rawaccel.exe` from the complete new build output. Apply the settings you want.
-3. Select **Background > Start with Windows**, then accept Windows' administrator prompt.
+2. Launch `rawaccel.exe` from the complete new build output. The GUI automatically installs or updates the background service on launch when the service is missing or this build differs from the installed one: it snapshots the currently active settings, requests administrator approval through UAC, runs `Install-Service.ps1` from the build folder, and confirms the service applied the saved settings. Nothing happens when everything is already up to date, and a deliberately disabled service is left alone. If UAC is declined or the update fails, a message explains the problem and the GUI continues without the service.
+3. Apply the settings you want. (The old manual path, **Background > Start with Windows**, still works and enables the service on demand.)
 4. Check **Background > Service status**. It should report `Running (startup enabled)` and successful restoration.
 
 You can close the GUI. Future Apply operations also save the next boot's settings. **Reset** in service mode applies and saves the default configuration. **Save current settings for startup** captures the configuration currently in the driver, including changes made with other compatible tools. One machine-wide startup configuration is shared by Windows accounts.
@@ -31,7 +33,7 @@ To import a settings file you already have, supply its actual path:
 .\Install-Service.ps1 -SettingsPath 'C:\path\to\your\settings.json'
 ```
 
-The installer validates the supplied file before changing the installation. It copies the executable and its dependencies to `%ProgramFiles%\RawAccel\Service`, registers `RawAccelService` with automatic startup, and starts it under **LocalService**. Configuration and rotating logs live in `%ProgramData%\RawAccel`. Administrators and the service can modify these files; ordinary users can read them and submit validated settings through a local named pipe. Network pipe access is denied. No signed driver binary is changed by this installer.
+The installer checks that a compatible driver is accessible and validates the selected settings before changing the installation. It copies the executable and its dependencies to `%ProgramFiles%\RawAccel\Service`, registers `RawAccelService` with automatic startup, grants the required file access, configures crash recovery, and starts it under **LocalService**. It waits up to 75 seconds for the service to confirm successful settings restoration before reporting success. If verification fails, it reports the service error and log location; correct the problem and rerun the installer. Configuration and rotating logs live in `%ProgramData%\RawAccel`. Administrators and the service can modify these files; ordinary users can read them and submit validated settings through a local named pipe. Network pipe access is denied. No signed driver binary is changed by this installer.
 
 Supplying `-SettingsPath '.\settings.json'` requires that file to exist in your current folder. Click **Apply** in `rawaccel.exe` to create the portable settings file while the service is absent or disabled, or omit `-SettingsPath` to use the first-install capture described above. If a driver upgrade is needed, use Raw Accel's normal driver installer separately. Moving the original download folder does not affect the installed service.
 

@@ -6,12 +6,14 @@ $errorsFound = $null
 $ast = [System.Management.Automation.Language.Parser]::ParseFile(
     (Resolve-Path -LiteralPath $installer).Path, [ref]$null, [ref]$errorsFound)
 if ($errorsFound) { throw $errorsFound[0] }
-$function = $ast.Find({ param($node)
-    $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
-    $node.Name -eq 'Read-StartupSettings'
-}, $true)
-if ($null -eq $function) { throw 'Installer configuration function was not found.' }
-. ([ScriptBlock]::Create($function.Extent.Text))
+foreach ($functionName in @('Read-StartupSettings', 'Assert-DriverAvailable', 'Wait-ServiceReady')) {
+    $function = $ast.Find({ param($node)
+        $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+        $node.Name -eq $functionName
+    }, $true)
+    if ($null -eq $function) { throw "Installer function $functionName was not found." }
+    . ([ScriptBlock]::Create($function.Extent.Text))
+}
 
 $testDirectory = Join-Path ([IO.Path]::GetTempPath()) ('RawAccel-installer-tests-' + [Guid]::NewGuid())
 New-Item -ItemType Directory -Path $testDirectory | Out-Null
@@ -26,12 +28,29 @@ if ($Action -eq '--export') {
     $global:LASTEXITCODE = $global:RawAccelInstallerTestState.ExportExit
 }
 elseif ($Action -eq '--validate') { $global:LASTEXITCODE = $global:RawAccelInstallerTestState.ValidateExit }
+elseif ($Action -eq '--check-driver') { $global:LASTEXITCODE = $global:RawAccelInstallerTestState.DriverExit }
+elseif ($Action -eq '--check-ready') {
+    $global:RawAccelInstallerTestState.ReadyCalls++
+    if ($global:RawAccelInstallerTestState.ReadyThrows) { throw 'Service pipe not yet available.' }
+    if ($global:RawAccelInstallerTestState.ReadyCalls -ge $global:RawAccelInstallerTestState.ReadyAfter) {
+        Write-Output 'Saved settings applied.'
+        $global:LASTEXITCODE = 0
+    }
+    else {
+        Write-Output 'Waiting to restore startup settings.'
+        $global:LASTEXITCODE = 1
+    }
+}
 else { throw "Unexpected test CLI action: $Action" }
 '@ | Set-Content -LiteralPath $fakeCli -Encoding UTF8
     $global:RawAccelInstallerTestState = [PSCustomObject]@{
         Calls = (New-Object 'System.Collections.Generic.List[object]')
         ExportExit = 0
         ValidateExit = 0
+        DriverExit = 0
+        ReadyCalls = 0
+        ReadyAfter = 1
+        ReadyThrows = $false
     }
     function Check([bool]$Condition, [string]$Message) { if (!$Condition) { throw $Message } }
     function Expect-Error([scriptblock]$Action, [string]$Expected) {
@@ -81,7 +100,25 @@ else { throw "Unexpected test CLI action: $Action" }
     Expect-Error { Read-StartupSettings $requested $saved $fakeCli } 'nothing was installed'
     Check ([IO.File]::ReadAllText($saved) -eq 'saved-profile') 'Validation failure changed saved settings.'
     Write-Output 'PASS Validation failure preserves the previous installation'
-    Write-Output '6 installer tests passed.'
+    Assert-DriverAvailable $fakeCli
+    Write-Output 'PASS Compatible driver passes preflight'
+    $global:RawAccelInstallerTestState.DriverExit = 1
+    Expect-Error { Assert-DriverAvailable $fakeCli } 'Nothing was installed'
+    Write-Output 'PASS Unavailable or incompatible driver fails preflight with setup instructions'
+
+    $global:RawAccelInstallerTestState.ReadyAfter = 2
+    $status = Wait-ServiceReady $fakeCli
+    Check ($global:RawAccelInstallerTestState.ReadyCalls -eq 2 -and $status -eq 'Saved settings applied.') 'Installer did not wait for restoration.'
+    Write-Output 'PASS Installer waits for confirmed restoration before reporting success'
+
+    $global:RawAccelInstallerTestState.ReadyCalls = 0
+    Expect-Error { Wait-ServiceReady $fakeCli 0 } 'did not confirm that startup settings were restored'
+    Write-Output 'PASS Running without restored settings fails installation verification'
+
+    $global:RawAccelInstallerTestState.ReadyThrows = $true
+    Expect-Error { Wait-ServiceReady $fakeCli 0 } 'Service pipe not yet available'
+    Write-Output 'PASS Service connection errors are reported as readiness failures'
+    Write-Output '11 installer tests passed.'
 }
 finally {
     Remove-Variable RawAccelInstallerTestState -Scope Global -ErrorAction SilentlyContinue

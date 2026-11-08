@@ -6,6 +6,30 @@ namespace wrapper_tests
     public class EndToEndTests
     {
         [TestMethod]
+        public void Convert_MinimumSpeed_PreservesFullProfileSnapshot()
+        {
+            var config = DriverConfig.GetDefault();
+            config.profiles[0].minimumSpeed = 0.5;
+            config.profiles[0].maximumSpeed = 100;
+            var result = DriverConfig.Convert(config.ToJSON());
+            Assert.IsNull(result.Item2);
+            Assert.AreEqual(0.5, result.Item1.profiles[0].minimumSpeed);
+        }
+
+        [TestMethod]
+        public void Convert_DeviceOnlyError_RejectsConfiguration()
+        {
+            var config = DriverConfig.GetDefault();
+            var device = config.defaultDeviceConfig;
+            device.dpi = -1;
+            config.defaultDeviceConfig = device;
+
+            var result = DriverConfig.Convert(config.ToJSON());
+            Assert.IsNull(result.Item1);
+            StringAssert.Contains(result.Item2, "dpi");
+        }
+
+        [TestMethod]
         public void ModifyInput_Default_DoesNotChangeInput()
         {
             var accel = new ManagedAccel();

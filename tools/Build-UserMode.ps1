@@ -74,10 +74,18 @@ Compile ($common + $references + @('/target:winexe', ('/out:' + (Join-Path $Outp
     ('/win32icon:' + (Join-Path $repo 'grapher\mouse.ico'))) + $resources + $guiSources)
 Copy-Item -LiteralPath (Join-Path $repo 'grapher\App.config') -Destination (Join-Path $OutputDirectory 'rawaccel.exe.config')
 $testSources = @('service-tests\Program.cs', 'service\SettingsEngine.cs', 'service\RawAccelService.cs',
-    'service\AccelerationDriver.cs') | ForEach-Object { Join-Path $repo $_ }
+    'service\AccelerationDriver.cs', 'service\StandaloneTrialHost.cs') | ForEach-Object { Join-Path $repo $_ }
 Compile ($common + @('/target:exe', ('/out:' + (Join-Path $OutputDirectory 'service-tests.exe'))) + $testSources + $shared)
 & (Join-Path $OutputDirectory 'service-tests.exe')
 if ($LASTEXITCODE -ne 0) { throw 'Service tests failed.' }
+$calibrationTests = @(Get-ChildItem (Join-Path $repo 'calibration-tests\*.cs') | ForEach-Object FullName)
+Compile ($common + @('/target:exe', ('/out:' + (Join-Path $OutputDirectory 'calibration-tests.exe')),
+    ('/reference:' + (Join-Path $framework 'System.Drawing.dll')),
+    ('/reference:' + (Join-Path $framework 'System.Windows.Forms.dll')),
+    ('/reference:trialhost=' + (Join-Path $OutputDirectory 'RawAccelService.exe')),
+    ('/reference:' + (Join-Path $OutputDirectory 'rawaccel.exe'))) + $calibrationTests)
+& (Join-Path $OutputDirectory 'calibration-tests.exe')
+if ($LASTEXITCODE -ne 0) { throw 'Calibration tests failed.' }
 & (Join-Path $PSScriptRoot 'Test-Installer.ps1')
 if ($LASTEXITCODE -ne 0) { throw 'Installer tests failed.' }
 Write-Output "Built GUI and service; tests passed. Output: $OutputDirectory"

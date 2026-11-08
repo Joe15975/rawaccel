@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <Platform Condition="'$(Platform)' == ''">x64</Platform>
+    <ProjectGuid>{3AF40377-B394-4EBE-9E8F-3056E9139B40}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>calibration-tests</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <PlatformTarget>$(Platform)</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="Newtonsoft.Json"><HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath></Reference>
+    <ProjectReference Include="..\service\service.csproj"><Project>{CF05B1D1-1A68-426E-B321-30B54B6907DE}</Project><Name>service</Name><Aliases>trialhost</Aliases></ProjectReference>
+    <ProjectReference Include="..\grapher\grapher.csproj"><Project>{EF67F71F-ABF5-4760-B50D-D1B9836DF01C}</Project><Name>grapher</Name></ProjectReference>
+    <ProjectReference Include="..\wrapper\wrapper.vcxproj"><Project>{28A3656F-A1DE-405C-B547-191C32EC555F}</Project><Name>wrapper</Name></ProjectReference>
+    <Compile Include="Program.cs" />
+    <Compile Include="AnalysisTests.cs" />
+    <Compile Include="FirstMovementTests.cs" />
+    <Compile Include="OptimizationFeedbackTests.cs" />
+    <Compile Include="UiTests.cs" />
+    <Compile Include="ActiveLabelTests.cs" />
+    <Compile Include="WorkflowTests.cs" />
+    <Compile Include="ValorantAimTests.cs" />
+    <Compile Include="ValorantScoringTests.cs" />
+    <Compile Include="CalibrationSearchTests.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

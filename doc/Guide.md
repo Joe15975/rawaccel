@@ -1,4 +1,7 @@
 # Raw Accel Guide
+
+For desktop pointing and Valorant hip-fire profile calibration, see [Mouse calibration](Calibration.md).
+
 ## Download
 
 Visit the [Releases page](https://github.com/a1xd/rawaccel/releases) and navigate to the "Assets" dropdown under the latest release, then download the zip file titled `RawAccel_X.X.X.zip` where X are the latest version numbers. **DO NOT** download by clicking the green "Code"/"Download" file on the home page of this repository as that will only download the source code, which isn't what you want.
@@ -120,6 +123,13 @@ Caps are only applicable to the [Classic](#classic), [Linear](#linear), and [Pow
 
 ### Anisotropy
 See "[Horizontal and Vertical](#horizontal-and-vertical)" in the philosophy section to understand what these options do.
+
+### Angle Snapping
+Use **Angle snap (°)** below Rotation, then click **Apply**. Values from 0 to 45 specify how close a movement must be to the horizontal or vertical axis to snap to it; 0 disables snapping. Snapping works with acceleration off as well as with acceleration enabled.
+
+The JSON property is `"Degrees of angle snapping"` within each profile, for example `"Degrees of angle snapping": 5.0`. Editing a file does not immediately change the driver. In standalone mode, close the GUI before editing `settings.json`, reopen it, and click **Apply** (or enable automatic writing on startup). The field retains the saved snapping value even if the driver currently has a different value; the Active column shows the driver's value until Apply succeeds.
+
+With the background service enabled, the saved configuration lives at `%ProgramData%\RawAccel\settings.json`; the portable file beside the GUI is not loaded. Use the GUI field and Apply, or import a JSON file with `RawAccelService.exe --apply "C:\path\to\settings.json"`. See [background service configuration](BackgroundService.md).
 
 ### Last Mouse Move
 The Raw Accel GUI reads the output of the raw input stream, and thus the output of the Raw Accel Driver, and displays on the graphs red points corresponding to the last mouse movements. These calulations should be fast and your graph responsive, but it comes at the cost of higher CPU usage due to needing to refresh the graph often. This feature can be turned off in the "Charts" menu.

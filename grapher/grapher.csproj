@@ -102,6 +102,17 @@
     </Compile>
     <Compile Include="Common\Constants.cs" />
     <Compile Include="Common\Helper.cs" />
+    <Compile Include="CalibrationForm.cs"><SubType>Form</SubType></Compile>
+    <Compile Include="CalibrationForm.Valorant.cs"><DependentUpon>CalibrationForm.cs</DependentUpon></Compile>
+    <Compile Include="CalibrationForm.Search.cs"><DependentUpon>CalibrationForm.cs</DependentUpon></Compile>
+    <Compile Include="Models\Calibration\CalibrationContracts.cs" />
+    <Compile Include="Models\Calibration\CalibrationTrialClient.cs" />
+    <Compile Include="Models\Calibration\CalibrationCapture.cs" />
+    <Compile Include="Models\Calibration\CalibrationAnalysis.cs" />
+    <Compile Include="Models\Calibration\CalibrationOptimizer.cs" />
+    <Compile Include="Models\Calibration\CalibrationSearch.cs" />
+    <Compile Include="Models\Calibration\ValorantAim.cs" />
+    <Compile Include="Models\Calibration\ValorantScoring.cs" />
     <Compile Include="DeviceMenuForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -125,6 +136,7 @@
     <Compile Include="Models\Charts\AccelCharts.cs" />
     <Compile Include="Models\AccelGUI.cs" />
     <Compile Include="Models\BackgroundServiceMenu.cs" />
+    <Compile Include="Models\FirstRunSetup.cs" />
     <Compile Include="..\service-shared\ServiceProtocol.cs"><Link>Common\ServiceProtocol.cs</Link></Compile>
     <Compile Include="..\service-shared\ServiceClient.cs"><Link>Common\ServiceClient.cs</Link></Compile>
     <Compile Include="Models\Charts\ChartState\ChartState.cs" />
